@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini-projeto REST - Lista de cotação de dolar</title>
+</head>
+
+<body>
+
+    <h1>Histórico de Cotação do Dólar</h1>
+
+    <!-- Rótulo, deve sempre star associado a um campo de formulário -->
+    <label for="quantidadeDias">Número de dias:</label>
+
+    <!--
+     value = valor padrão; assim que entra na pagina ele ja mostra valor 7
+     min = limite inferior, minimo valor que ele aceita não faz sentido ser 0 ou 1 -->
+    <input id="quantidadeDias" type="number" value="7" min="1" max="20">
+
+    <button id="btnAtualizar">Buscar histórico</button>
+    <!-- Se uso id, é indicador que manipularei esses elementos no js -->
+
+    
+    <hr />
+
+    <h3>Resultados:</h3>
+    <ul id="listaCotacoes">
+
+    </ul>
+
+    <!-- Colocando o javascript dentro do html -->
+    <!-- tag script: ela habilita javascript
+     Constante lista foi criada para armazenar ref. de busca no html por listaCotacoes -->
+    <script>
+        // Função buscarCotacao não tem parametros, por isso () ta vazio
+        // async pois nao obedece a sequência, pois farei requisições externas a minha aplicação
+        async function buscarCotacao() {
+            // Extrair valor que informei de dias
+            const dias = document.getElementById("quantidadeDias").value;
+            const lista = document.getElementById("listaCotacoes");
+            // element lista: dentro do seu html, adicione o texto carregnado
+            lista.innerHTML = "Carregando..." + dias;
+
+            // Template string concatena funcao e vafriavel usando {}, 
+            // Obrigatoriamente tem que ser crase  ´ ´ (crase) , não pode ser aspas
+            const url = `https://economia.awesomeapi.com.br/json/daily/USD-BRL/${dias}`;
+            // Testa se terá retorno digitando https://economia.awesomeapi.com.br/json/daily/USD-BRL/5 no navegador
+
+            // tratando erro
+            try {
+                const response = await fetch(url);
+                // Só posso usar await se eu usar async, função assincrona. Se eu nao colocar async la em cima, o await mostra erro.
+                // Nesse ponto, ele continuará mas aguardará pra ver retorno.
+                
+                const dados = await response.json();
+                // Transformará a responsta recebeida como objeto json
+
+                // Após passar por esses await, ele limpará minha tela
+                // Limpar o texto de carregamento: coloca string vazia, ele deixará tudo vazio
+                lista.innerHTML = ""; 
+
+                // Itera sobre cada item do resulttest
+                // Função anonima não tem nome de operador, sp tem (callback, parametros) => {instrucoes}. mas não pode ser chamada. Ja a função normal é nome(param) {instrucoes}
+                // Assim, essa funcao anonima so executará aqui.
+                // No f12 devtools do firefox developer, json, mostra 0 a 4 respostas pra minha pesquisa de 5 dias de dolar.
+                // Cada run da quant. de dias que informo é um vetor, e o conteudo dele é um json  0: {..}  é vetor pois começa o index em 0
+                dados.forEach((item, index) => {
+                    // Exibir as cotações de dolar
+                    const li = document.createElement("li");
+                    // Valor da cotação terá 2 casas decimais, e converteremos valor para float para isso.
+                    const valor = parseFloat(item.bid).toFixed(2);
+                    // Extrair data da cotação:
+                    // Parse não é conversão, conversão é casting. parse é so pegar uma coisa e entregar outra, como outra 
+                    // Casting é conversçao de tipo, aprsing voce ta transferindo valor, nao to enviando a propria variavel
+                    // Casting:  bola volley -> bola basquete   
+                    // Parsing  passei a bola de vollei pra outro lado, ainda como bola de volei
+                    // Front end é basicamente pratica pra lembrar de fazer esse passo a passo e entender o que precisa
+
+                    const data = new Date(item.timestamp * 1000).toLocaleDateString("pt-BR"); 
+
+                    li.innerText = `Dia ${index + 1} (${data}): R$ ${valor}`;
+                    console.log(li);
+                    lista.appendChild(li);              
+                });
+            } 
+            catch (error){
+                console.error("Erro na requisição:", error);
+                lista.innerHTML = "<li>Erro ao buscar dados</li>"
+            }
+            
+        }
+
+   
+
+        document.getElementById("btnAtualizar").addEventListener("click", buscarCotacao);
+    </script>
+    
+</body>
+</html>
